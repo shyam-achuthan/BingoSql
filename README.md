@@ -54,7 +54,7 @@ class Groups extends BingoSqlModel
 // protected $has_many =array('table_name'=>'native_primary_key|foreign_key_field_at_related_table'); 
 </pre>
 </li>
-<li></li>
+<li>Models can be in separate php class files in the models directory or any other single directory.</li>
 </ul>
 
 ##Code Samples
