@@ -3,6 +3,11 @@ BingoSql
 
 A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites.
 
+##Configuration
+Include boostrap.php in your php application<br>
+change the database settings in lib/config.php<br>
+And you're done!<br>
+
 ##Creating Models
 <ul>
 <li>All models should extend BingoSql Class
