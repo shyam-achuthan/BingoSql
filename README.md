@@ -6,7 +6,7 @@ A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications
 
 ##Code Samples
 <pre>
-<?php
+
 
 include('../bootstrap.php');
 
