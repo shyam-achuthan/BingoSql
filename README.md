@@ -3,6 +3,59 @@ BingoSql
 
 A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites.
 
+##Creating Models
+<ul>
+<li>All models should extend BingoSql Class
+<pre>
+class User_details extends BingoSqlModel
+{
+          
+}
+</pre>
+</li>
+<li>Default primary key will be chosen as 'id' otherwise you should specify the primary key field 
+<pre>
+class User_details extends BingoSqlModel
+{
+   
+    protected $key='Id';   
+    
+}
+</pre>
+</li>
+<li>Model name should be same as the table name otherwise you should add protected $table="tablename" to the class
+<pre>
+class User extends BingoSqlModel
+{
+    protected $table='user_details';
+    protected $key='Id';
+}
+</pre>
+</li>
+<li>Defining relations - As of now BingoSql support two kind of relations, belongs_to and has_many<br>
+While defining the relation your should represent the foreign filed and native primary key field.
+Here in the example a user->belongs_to->groups and a groups->has_many->users
+<pre>
+class User extends BingoSqlModel
+{
+    protected $table='user_details';
+    protected $key='Id';
+    protected $belongs_to = array('groups'=>'group_id|Id'); 
+    
+}
+// protected $belongs_to =array('table_name'=>'foreign_field_name|native_primary_key_for_table_which_it_belong_to'); 
+class Groups extends BingoSqlModel
+{
+    protected $table='groups';
+    protected $key='Id';
+    protected $has_many = array('user_details'=>'Id|group_id'); 
+    
+}
+// protected $has_many =array('table_name'=>'native_primary_key|foreign_key_field_at_related_table'); 
+</pre>
+</li>
+<li></li>
+</ul>
 
 ##Code Samples
 <pre>
