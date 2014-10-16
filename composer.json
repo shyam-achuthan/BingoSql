@@ -1,0 +1,12 @@
+{
+    "name": "shyam-achuthan/bingosql",
+    "description": "Lightweight php mysql activerecord library",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Shyam-Achuthan",
+            "email": "shyam.webdev@gmail.com"
+        }
+    ],
+    "require": {}
+}
