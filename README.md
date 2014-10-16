@@ -103,4 +103,31 @@ foreach ($grp->user_details as $user) {
     echo '<hr>';
 }
 
+
+
+//Advanced find method where you can use the options like limit, where, order_by etc
+$users=$s->find('all',array(
+                    'limit'=>'0,2'
+                    ));
+// returned will be an array of objects of the respective model class
+
+//using where conditions
+$users=$s->find('all',array(
+                    'where'=>array('id>1',"email like '%gmail.com'")
+                    ));
+
+//using order_by
+$users=$s->find('all',array(
+                    'order_by'=>array('id desc',"email asc")
+                    ));
+                    
+//using multiple advanced finds
+$users=$s->find('all',array(
+                    'limit'=>'0,2',
+                    'where'=>array('id>1',"email like '%gmail.com'"),
+                    'order_by'=>array('id desc',"email asc")
+                    ));
+
+                    
+
 </pre>
