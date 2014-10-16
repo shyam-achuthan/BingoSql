@@ -1,7 +1,7 @@
 BingoSql
 ========
 
-A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites.
+A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites. Yep its just 200 lines of code.
 
 ##Configuration
 Include boostrap.php in your php application<br>
