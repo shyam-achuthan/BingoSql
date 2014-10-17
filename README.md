@@ -1,7 +1,12 @@
 BingoSql
 ========
 
-A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites.
+A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites. Yep its just 200 lines of code.
+
+##Configuration
+Include boostrap.php in your php application<br>
+change the database settings in lib/config.php<br>
+And you're done!<br>
 
 ##Creating Models
 <ul>
@@ -97,5 +102,32 @@ foreach ($grp->user_details as $user) {
     echo "Email: " . $existinguser->email . '<br>';
     echo '<hr>';
 }
+
+
+
+//Advanced find method where you can use the options like limit, where, order_by etc
+$users=$s->find('all',array(
+                    'limit'=>'0,2'
+                    ));
+// returned will be an array of objects of the respective model class
+
+//using where conditions
+$users=$s->find('all',array(
+                    'where'=>array('id>1',"email like '%gmail.com'")
+                    ));
+
+//using order_by
+$users=$s->find('all',array(
+                    'order_by'=>array('id desc',"email asc")
+                    ));
+                    
+//using multiple advanced finds
+$users=$s->find('all',array(
+                    'limit'=>'0,2',
+                    'where'=>array('id>1',"email like '%gmail.com'"),
+                    'order_by'=>array('id desc',"email asc")
+                    ));
+
+                    
 
 </pre>
