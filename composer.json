@@ -8,5 +8,8 @@
             "email": "shyam.webdev@gmail.com"
         }
     ],
-    "require": {}
+    "autoload":{
+            "files":["lib/BingoSql.php"]
+        
+    }
 }

@@ -1,5 +1,5 @@
 <?php
-class User extends BingoSqlModel
+class User extends BingoSql\Model
 {
     protected $table='user_details';
     protected $key='Id';

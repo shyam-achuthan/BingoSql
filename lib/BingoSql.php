@@ -1,33 +1,40 @@
 <?php
-require_once('config.php');
-define('HTML_EOL', '<br>');
 
-class BingoSqlConn extends PDO {
+namespace BingoSql;
 
-    private $engine;
-    private $host;
-    private $database;
-    private $user;
-    private $pass;
+class Instance {
 
-    public function __construct() {
-        $this->engine = 'mysql';
-        $this->host = DATABASE_HOST;
-        $this->database = DATABASE_NAME;
-        $this->user = DATABASE_USER;
-        $this->pass = DATABASE_PASSWORD;
-        $dns = $this->engine . ':dbname=' . $this->database . ";host=" . $this->host;
-        parent::__construct($dns, $this->user, $this->pass);
-    }
-
-    public static function init($options = array()) {
-        if (isset($options['models_path'])) {
-            echo __DIR__ . "../" . $options['models_path'];
-        }
+    public function __construct($options) {
+        Connection::$engine = isset($options['DATABASE_ENGINE']) ? $options['DATABASE_ENGINE'] : Connection::$engine;
+        Connection::$host = isset($options['DATABASE_HOST']) ? $options['DATABASE_HOST'] : '';
+        Connection::$user = isset($options['DATABASE_USER']) ? $options['DATABASE_USER'] : '';
+        Connection::$pass = isset($options['DATABASE_PASSWORD']) ? $options['DATABASE_PASSWORD'] : '';
+        Connection::$database = isset($options['DATABASE_NAME']) ? $options['DATABASE_NAME'] : '';
+        if (isset($options['MODELS_PATH']))
+            foreach (glob(__DIR__ . "/../" . $options['MODELS_PATH'] . '/' . "*.php") as $filename) {
+                require_once($filename);
+                echo $filename;
+            }
     }
 
 }
-class BingoSqlModel {
+
+class Connection extends \PDO {
+
+    static $engine = 'mysql';
+    static $host;
+    static $database;
+    static $user;
+    static $pass;
+
+    public function __construct() {
+        $dns = self::$engine . ':dbname=' . self::$database . ";host=" . self::$host;
+        parent::__construct($dns, self::$user, self::$pass);
+    }
+
+}
+
+class Model {
 
     private $fields = array();
     protected $table = '';
@@ -37,7 +44,10 @@ class BingoSqlModel {
     protected $has_many = '';
 
     public function __construct() {
-        self::$pdoConn = new BingoSqlConn();
+        self::$pdoConn = new Connection();
+
+        if ($this->table == '')
+            $this->table = get_class($this);
     }
 
     public function __set($name, $value) {
@@ -58,7 +68,7 @@ class BingoSqlModel {
     public function __call($name, $arguments = array()) {
 
         if ($this->table == '' && $name != 'table')
-            $this->table = $this->table == '' ? strtolower(get_class($this)) : $this->table;
+            $this->table = $this->table == '' ? (get_class($this)) : $this->table;
 
         $s = $this->$name($arguments);
         if ($s != '')
@@ -67,12 +77,16 @@ class BingoSqlModel {
             return $this;
     }
 
-    public static function query($query) {
+    public static function query($query,$args = FALSE,$return=TRUE,$fetchAll=true) {
 
 
         $sth = self::$pdoConn->prepare($query);
-        $s = $sth->execute();
-        return $s ? $sth->fetchAll(PDO::FETCH_ASSOC) : FALSE;
+        $s = ($args) ? $sth->execute($args):$sth->execute();
+        if($return)
+        if($fetchAll)
+            return $s ? $sth->fetchAll(\PDO::FETCH_ASSOC) : FALSE;
+        else
+            return $s ? $sth->fetch(\PDO::FETCH_ASSOC) : FALSE;    
     }
 
     protected function returnRel($name) {
@@ -84,16 +98,7 @@ class BingoSqlModel {
                 ':idval' => $this->__get($tmp_keys[0])
             );
 
-            $sth = self::$pdoConn->prepare($query);
-            $s = $sth->execute($args);
-
-            if (!$s) {
-                echo "\PDO::errorInfo():\n";
-                print_r(self::$pdoConn->errorInfo());
-            }
-
-
-            $data = $sth->fetch(PDO::FETCH_ASSOC);
+            $data = self::query($query,$args,TRUE,FALSE);
 
             $belongs_to = $this->getTableModel($name);
 
@@ -111,20 +116,11 @@ class BingoSqlModel {
                 ':idval' => $this->__get($tmp_keys[0])
             );
 
-            $sth = self::$pdoConn->prepare($query);
-            $s = $sth->execute($args);
-
-            if (!$s) {
-                echo "\PDO::errorInfo():\n";
-                print_r(self::$pdoConn->errorInfo());
-            }
-
-
-            $rows = $sth->fetchAll(PDO::FETCH_ASSOC);
-
-            $has_many_objs = array();
-            $has_many = $this->getTableModel($name);
+           $rows = self::query($query,$args,TRUE,TRUE);
+           
+           $has_many_objs = array();
             foreach ($rows as $data) {
+                $has_many = $this->getTableModel($name);
                 foreach ($data as $k => $v) {
 
                     $has_many->{$k} = $v;
@@ -153,17 +149,28 @@ class BingoSqlModel {
     protected function getTableModel($tablename) {
 
         foreach (get_declared_classes() as $class_name) {
-            $pclass = get_parent_class($class_name);
-            if ($pclass == 'BingoSqlModel') {
-                if (strtolower($tablename) == strtolower($class_name))
-                    return new $class_name();
 
-                $s = new $class_name();
+
+
+            $pclass = get_parent_class($class_name);
+            $glob_class_name = "\\" . $class_name;
+
+            if ($pclass == 'BingoSql\Model') {
+                if (strtolower($tablename) == strtolower($class_name)) {
+
+                    return new $glob_class_name();
+                }
+
+
+
+                $s = new $glob_class_name();
+
                 if ($s->getTableName() == $tablename)
                     return $s;
             }
         }
-        return new BingoSqlModel();
+
+        return new Model();
     }
 
     protected function &find($arguments) {
@@ -190,25 +197,19 @@ class BingoSqlModel {
 
         if (is_int($arguments[0])) {
             $query = "SELECT * FROM {$this->table} where $this->key=" . $arguments[0];
-            $sth = self::$pdoConn->prepare($query);
-            $sth->execute();
-            $this->fields = $sth->fetch(PDO::FETCH_BOTH);
+            $this->fields = self::query($query,FALSE,TRUE,FALSE);
             return $this;
         } else if ($arguments[0] == 'all') {
             $query = "SELECT * FROM {$this->table}";
             $query.= $where == '' ? '' : " WHERE {$where}";
             $query.= $order_by == '' ? '' : " ORDER BY {$order_by}";
             $query.= $limit == '' ? '' : " LIMIT {$limit}";
-
-
-            $sth = self::$pdoConn->prepare($query);
-            $sth->execute();
             $rows = array();
-
-            $data = $sth->fetchAll(PDO::FETCH_ASSOC);
+            $data = self::query($query,FALSE,TRUE,TRUE);
             $rows = array();
             foreach ($data as $row) {
-                $user = new BingoSqlModel();
+                $user = new Model();
+
                 foreach ($row as $key => $value)
                     $user->{$key} = $value;
 
@@ -231,8 +232,7 @@ class BingoSqlModel {
             }
             $query = rtrim($query, ',');
             $query .= " WHERE {$this->key}=:{$this->key}";
-            $stm = self::$pdoConn->prepare($query);
-            $stm->execute($matches);
+            self::query($query,$matches,FALSE);
         } else {
             $query = "INSERT INTO {$this->table} ";
             $fields = '';
@@ -246,15 +246,23 @@ class BingoSqlModel {
             $fields = rtrim($fields, ',');
             $values = rtrim($values, ',');
             $query.= " ({$fields}) VALUES ({$values})";
-            $stm = self::$pdoConn->prepare($query);
-            try {
-                $stm->execute($matches);
-                $this->fields[$this->key] = self::$pdoConn->lastInsertId();
-            } catch (Exception $ex) {
-                echo $ex->getMessage();
-            }
+            self::query($query,$matches,FALSE);
+            $this->fields[$this->key] = self::$pdoConn->lastInsertId();
+              
         }
     }
+
+    public static function CreateModel($name, $options) {
+        if (!class_exists($name)) {
+            $class_options = '';
+            $class_options .= isset($options['table']) ? " protected \$table='{$options['table']}';" . PHP_EOL : '';
+            $class_options .= isset($options['primary_key']) ? " protected \$key='{$options['primary_key']}';" . PHP_EOL : '';
+            $class_creation = "class $name extends \BingoSql\Model { $class_options }";
+            eval($class_creation);
+        }
+        return true;
+    }
+
 }
 
 function __autoload($class_name) {
@@ -263,8 +271,4 @@ function __autoload($class_name) {
         require_once (__DIR__ . "/../" . MODELS_PATH . '/' . $class_name . '.php');
         return;
     }
-}
-
-foreach (glob(__DIR__ . "/../" . MODELS_PATH . '/' . "*.php") as $filename) {
-    require_once($filename);
 }

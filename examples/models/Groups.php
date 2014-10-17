@@ -1,5 +1,5 @@
 <?php
-class Groups extends BingoSqlModel
+class Groups extends BingoSql\Model
 {
     protected $table='groups';
     protected $key='Id';
