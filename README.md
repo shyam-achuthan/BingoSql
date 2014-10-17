@@ -127,7 +127,7 @@ echo "There are " . count($grp->user_details) . " users in this group<br>";
 foreach ($grp->user_details as $user) {
     echo "Fullname: " . $user->fullname . '<br>';
     echo "Email: " . $user->email . '<br>';
-    echo '<hr>';
+    
 }
 
 
