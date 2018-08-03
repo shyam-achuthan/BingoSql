@@ -3,6 +3,8 @@ BingoSql
 
 A lightweight PHP/Mysql ActiveRecord for beginners and light weight applications and cms websites. Yep its just 200 lines of code.
 
+#Works with MSQL only ##
+
 ##Configuration
 Include BingoSql.php in your php application( vendor/autoload.php if you are using composer autoloading)<br>
 Initialize BingoSql Instance
